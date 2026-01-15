@@ -43,15 +43,18 @@ class TransactionResource extends Resource
 
             // Pilih Unit (Mobil/Motor)
             Select::make('unit_id')
-                ->relationship('unit', 'name')
-                ->searchable()
-                ->preload()
-                ->required()
-                ->label('Unit yang Disewa')
-                ->live() // PENTING: Agar saat dipilih, bisa trigger hitung harga
-                ->afterStateUpdated(function (Get $get, Set $set) {
-                    self::calculateTotal($get, $set);
-                }),
+    ->relationship('unit', 'name', modifyQueryUsing: function (Builder $query) {
+        // Hanya tampilkan unit yang statusnya 'ready'
+        return $query->where('status', 'ready');
+    })
+    ->searchable()
+    ->preload()
+    ->required()
+    ->label('Unit yang Disewa')
+    ->live()
+    ->afterStateUpdated(function (Get $get, Set $set) {
+        self::calculateTotal($get, $set);
+    }),
 
             // Tanggal Mulai
             DatePicker::make('start_date')

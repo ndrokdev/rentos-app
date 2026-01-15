@@ -16,6 +16,29 @@ class Transaction extends Model
         'end_date' => 'date',
     ];
 
+    // --- TAMBAHKAN KODE INI (MAGIC LOGIC) ---
+    protected static function booted()
+    {
+        // 1. Saat Transaksi BARU dibuat (Created)
+        static::created(function ($transaction) {
+            // Ubah status unit menjadi 'rented'
+            $transaction->unit()->update(['status' => 'rented']);
+        });
+
+        // 2. Saat Transaksi DIUPDATE (Misal status diganti jadi Selesai/Batal)
+        static::updated(function ($transaction) {
+            // Jika status transaksi berubah jadi 'completed' (Barang kembali)
+            if ($transaction->status === 'completed') {
+                $transaction->unit()->update(['status' => 'ready']);
+            }
+            
+            // Jika status transaksi dibatalkan
+            if ($transaction->status === 'cancelled') {
+                $transaction->unit()->update(['status' => 'ready']);
+            }
+        });
+    }
+
     // Relasi: Transaksi milik Customer
     public function customer(): BelongsTo
     {
